@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
+const app = require('./app.js');
 //configuro variables de entorno
 dotenv.config({ path: './config.env' });
 
@@ -24,7 +25,6 @@ process.on('uncaughtException', (err) => {
   process.exit(1);
 });
 //configuraciones de variables glbales(dotenv.config) antes para poder acceder a las variables
-const app = require('./app');
 // console.log(app.get('env'));
 // console.log(process.env);
 const port = process.env.PORT || 3000;

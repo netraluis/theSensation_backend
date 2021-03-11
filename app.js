@@ -7,18 +7,19 @@ const rateLimit = require('express-rate-limit');
 const AppError = require('./utils/appError');
 const globalErrorHandler = require('./controllers/error.controller');
 
-// const tourRouter = require('./routes/tourRoutes');
+const bookingsRouter = require('./routes/stripeRoutes');
 const userRouter = require('./routes/userRoutes');
 // const reviewRouter = require('./routes/reviewRoutes');
 
-const app = express();
 
+const app = express();
+app.use(cors({origin:'*'}));
 //-----------------------------------------1) GLOBAL Middleware------------------------------
 
 if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'));
 }
-app.use(cors());
+
 //limiter requues flom same API
 const limiter = rateLimit({
   max: 100,
@@ -34,9 +35,9 @@ app.use(express.json({ limit: '10kb' }));
 //servir páginas estáticas desde el folder
 app.use(express.static(`${__dirname}/public`));
 
-
 // //-----------------------------------------1)Routes------------------------------
-// app.use('/api/v1/tours', tourRouter);
+console.log('llego')
+app.use('/api/v1/bookings', bookingsRouter);
 app.use('/api/v1/users', userRouter);
 // app.use('/api/v1/reviews', reviewRouter);
 
