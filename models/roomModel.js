@@ -1,10 +1,11 @@
 const mongoose = require("mongoose");
 
-const bookingSchema = new mongoose.Schema({
-  ocupation: [
+const roomSchema = new mongoose.Schema({
+  occupation: [
     {
-      bookingId: String,
-      date: Date,
+      paymentMethodId: String,
+      startDate: Date,
+      endDate: Date,
       pay: {
         type: Boolean,
         default: false,
@@ -12,10 +13,7 @@ const bookingSchema = new mongoose.Schema({
     },
   ],
   room: String,
-  pay: {
-    type: Boolean,
-    default: false,
-  },
+  description: String
 });
 
 const Room = mongoose.model("Room", roomSchema);

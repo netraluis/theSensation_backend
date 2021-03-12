@@ -7,9 +7,9 @@ const rateLimit = require('express-rate-limit');
 const AppError = require('./utils/appError');
 const globalErrorHandler = require('./controllers/error.controller');
 
-const bookingsRouter = require('./routes/stripeRoutes');
+// const bookingsRouter = require('./routes/stripeRoutes');
 const userRouter = require('./routes/userRoutes');
-// const reviewRouter = require('./routes/reviewRoutes');
+const bookingsRouter = require('./routes/bookingRoute');
 
 
 const app = express();
@@ -37,9 +37,9 @@ app.use(express.static(`${__dirname}/public`));
 
 // //-----------------------------------------1)Routes------------------------------
 console.log('llego')
-app.use('/api/v1/bookings', bookingsRouter);
+// app.use('/api/v1/bookings', bookingsRouter);
 app.use('/api/v1/users', userRouter);
-// app.use('/api/v1/reviews', reviewRouter);
+app.use('/api/v1/bookings', bookingsRouter);
 
 //creamos un middleware para cuando se coloca una url erronea
 app.use('*', (req, res, next) => {

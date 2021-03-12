@@ -9,19 +9,30 @@ const bookingSchema = new mongoose.Schema({
   extras: [
     {
       extra: String,
-      quantity: Number,
+      quantity: {
+        type: Number,
+        default: 1,
+      },
       comments: String,
     },
   ],
-  dates: {
-    type: [
-      {
-        day: Date,
-      },
-    ],
-    required: [true, "date is required to know the ocupation"],
+  startDate: {
+    type: Date,
+    required: [true, "need start date"],
   },
-  room: String,
+  endDate: {
+    type: Date,
+    required: [true, "need end date"],
+  },
+  // dates: {
+  //   type: [Date],
+  //   default: [],
+  //   required: [true, "need dates to complete the reservation"],
+  // },
+  room: {
+    type: String,
+    required: [true, "room is required"],
+  },
   email: {
     type: String,
     required: [true, "email is required"],
@@ -30,11 +41,28 @@ const bookingSchema = new mongoose.Schema({
   },
   name: String,
   pay: {
-      type: Boolean,
-      default: false
-    }
+    type: Boolean,
+    default: false,
+  },
+  totalPrice: Number
 });
 
-const Booking = mongoose.model('Booking', bookingSchema);
+// bookingSchema.pre("save", function (next) {
+//   //funcion para sumar dias
+//   Date.prototype.addDays = function (days) {
+//     let date = new Date(this.valueOf());
+//     date.setDate(date.getDate() + days);
+//     return date;
+//   };
+
+//   let currentDate = this.startDate;
+//   while (currentDate <= this.endDate) {
+//     this.dates.push(new Date(currentDate));
+//     currentDate = currentDate.addDays(1);
+//   }
+//   next();
+// });
+
+const Booking = mongoose.model("Booking", bookingSchema);
 
 module.exports = Booking;
