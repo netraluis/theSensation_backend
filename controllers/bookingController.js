@@ -2,7 +2,7 @@ const catchAsync = require("../utils/catchAsync");
 const AppError = require("../utils/appError");
 const Booking = require("../models/bookingModel");
 const Room = require("../models/roomModel");
-const Price = require ("../models/priceModel");
+const Price = require("../models/priceModel");
 const Stripe = require("stripe");
 
 exports.roomBooking = catchAsync(async (req, res, next) => {
@@ -62,24 +62,25 @@ exports.roomBooking = catchAsync(async (req, res, next) => {
       },
     }
   );
-  
+
   let differenceDays =
     (new Date(endDate).getTime() - new Date(startDate).getTime()) /
     (1000 * 3600 * 24);
-    let prices = await Price.find({})
-
-    console.log({prices})
+  try {
+    let prices = await Price.find({});
     let extraPriceAcumulator = 0;
-    extras.forEach(extra => {
-      const extraPrice = prices.find(price => price.subject === extra.extra)
+    extras.forEach((extra) => {
+      const extraPrice = prices.find((price) => price.subject === extra.extra);
       const quantity = extra.quantity || 1;
-      extraPriceAcumulator = extraPriceAcumulator + quantity*extraPrice.price
+      extraPriceAcumulator = extraPriceAcumulator + quantity * extraPrice.price;
     });
-    const roomPrice = prices.find(price => price.subject === 'room')
-    const totalPrice = roomPrice.price*differenceDays + extraPriceAcumulator;
+    const roomPrice = prices.find((price) => price.subject === "room");
+    const totalPrice = roomPrice.price * differenceDays + extraPriceAcumulator;
     req.body.totalPrice = totalPrice;
+  } catch (e) {
+    next(new AppError("No price for some extra", 500));
+  }
 
-    
   if (!availability.length && !!roomBooking.nModified) {
     let newBooking = await Booking.create(req.body);
     res.status(201).json({
@@ -95,24 +96,40 @@ exports.roomBooking = catchAsync(async (req, res, next) => {
 
 exports.paymentBooking = catchAsync(async (req, res, next) => {
   const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
-  const { paymentId, amount } = req.body;
-  try {
-    const paymentIntent = await stripe.paymentIntents.create({
-      amount,
-      currency: "eur",
-      payment_method_types: ["card"],
-      payment_method: paymentId,
-      off_session: true,
-      confirm: true,
-    });
+  const { paymentMethodId } = req.body;
 
-    res.status(200).json({
-      status: "success",
-      data: {
-        paymentIntent,
-      },
-    });
-  } catch (e) {
-    return next(new AppError("payment method error", 401));
-  }
+  const paymentBooking = await Booking.findOne({
+    paymentMethodId: paymentMethodId,
+    pay: false,
+  });
+  const amount = paymentBooking.totalPrice;
+  const roomBooking = await Room.findOne({ room: paymentBooking.room });
+  const paymentBookingUpdate = await Booking.updateOne(
+    { paymentMethodId: paymentMethodId, pay: false },
+    { pay: true }
+  );
+  const roomFilter = roomBooking.occupation.filter(
+    (occupation) => occupation.paymentMethodId !== paymentMethodId
+  );
+  const roomFind = roomBooking.occupation.find(
+    (occupation) => occupation.paymentMethodId === paymentMethodId
+  );
+  roomFilter.push({ ...roomFind._doc, pay: true });
+  await Room.update({ room: paymentBooking.room }, { occupation: roomFilter });
+  const paymentIntent = await stripe.paymentIntents.create({
+    amount: amount * 100,
+    currency: "eur",
+    payment_method_types: ["card"],
+    // customer: customer.id,
+    payment_method: paymentMethodId,
+    off_session: true,
+    confirm: true,
+  });
+
+  res.status(200).json({
+    status: "success",
+    data: {
+      paymentIntent,
+    },
+  });
 });

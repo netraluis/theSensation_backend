@@ -7,7 +7,7 @@ const rateLimit = require('express-rate-limit');
 const AppError = require('./utils/appError');
 const globalErrorHandler = require('./controllers/error.controller');
 
-// const bookingsRouter = require('./routes/stripeRoutes');
+const stripeRouter = require('./routes/stripeRoutes');
 const userRouter = require('./routes/userRoutes');
 const bookingsRouter = require('./routes/bookingRoute');
 
@@ -37,7 +37,7 @@ app.use(express.static(`${__dirname}/public`));
 
 // //-----------------------------------------1)Routes------------------------------
 console.log('llego')
-// app.use('/api/v1/bookings', bookingsRouter);
+app.use('/api/v1/bookings', stripeRouter);
 app.use('/api/v1/users', userRouter);
 app.use('/api/v1/bookings', bookingsRouter);
 

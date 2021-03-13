@@ -83,15 +83,17 @@ exports.prueba = catchAsync(async(req, res)=>{
 //     cvc: '314',
 //   },
 // });
+
+console.log({body})
 const paymentIntent = await stripe.paymentIntents.create({
-  amount: 2000,
+  amount: 3000,
   currency: 'eur',
   payment_method_types: ['card'],
   // customer: customer.id,
   // off_session: true,
   payment_method: body,
   off_session: true,
-    confirm: true,
+  confirm: true,
 });
 
 console.log({paymentIntent})
