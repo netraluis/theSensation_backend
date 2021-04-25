@@ -36,6 +36,11 @@ app.use(express.json({ limit: '10kb' }));
 app.use(express.static(`${__dirname}/public`));
 
 // //-----------------------------------------1)Routes------------------------------
+app.use('/prueba', (req,res,next)=>{
+  res.status(200).json({
+    status: 'funciona'
+  })
+})
 app.use('/api/v1/bookings', stripeRouter);
 app.use('/api/v1/users', userRouter);
 app.use('/api/v1/bookings', bookingsRouter);
