@@ -21,13 +21,13 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 //limiter requues flom same API
-const limiter = rateLimit({
-  max: 100,
-  windowMs: 60 * 60 * 1000,
-  message: 'Too many request from this IP, please try again in a hour!',
-});
+// const limiter = rateLimit({
+//   max: 100,
+//   windowMs: 60 * 60 * 1000,
+//   message: 'Too many request from this IP, please try again in a hour!',
+// });
 
-app.use('/api', limiter);
+// app.use('/api', limiter);
 //esto es para que se pueda usar req.body es un middleware con limite de peso
 app.use(express.json({ limit: '10kb' }));
 
@@ -36,7 +36,6 @@ app.use(express.json({ limit: '10kb' }));
 app.use(express.static(`${__dirname}/public`));
 
 // //-----------------------------------------1)Routes------------------------------
-console.log('llego')
 app.use('/api/v1/bookings', stripeRouter);
 app.use('/api/v1/users', userRouter);
 app.use('/api/v1/bookings', bookingsRouter);

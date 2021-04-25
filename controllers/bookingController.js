@@ -6,9 +6,22 @@ const Price = require("../models/priceModel");
 const Stripe = require("stripe");
 
 exports.roomBooking = catchAsync(async (req, res, next) => {
+  console.log(req.body)
   const { startDate, endDate, paymentMethodId, room, extras } = req.body;
 
-  ////////////////////////////////////////////////////////////////////////////// crear nueva habitacion/////////////////////
+  let st = new Date(startDate);
+  st.setHours( st.getHours() + 13 );
+  let en = new Date(endDate);
+  en.setHours( en.getHours() + 11 );
+
+  let clSt = new Date(startDate);
+  clSt.setHours( st.getHours() + 12);
+  let clEn = new Date(endDate);
+  clEn.setHours( en.getHours() + 12 );
+
+  
+
+  /////////////////////////////////////////// crear nueva habitacion/////////////////////
 
   // const newRoom = await Room.create({
   //   room:'11',
@@ -19,18 +32,42 @@ exports.roomBooking = catchAsync(async (req, res, next) => {
     $or: [
       {
         $and: [
-          { startDate: { $lte: new Date(req.body.endDate) } },
-          { endDate: { $gte: new Date(req.body.endDate) } },
+          { startDate: { $lte: clEn } },
+          { endDate: { $gte: clEn } },
         ],
       },
       {
         $and: [
-          { startDate: { $lte: new Date(req.body.startDate) } },
-          { endDate: { $gte: new Date(req.body.startDate) } },
+          { startDate: { $lte: clSt } },
+          { endDate: { $gte: clSt } },
         ],
       },
     ],
   });
+
+  
+
+  let differenceDays =
+    (new Date(endDate).getTime() - new Date(startDate).getTime()) /
+    (1000 * 3600 * 24);
+  try {
+    let prices = await Price.find({});
+    console.log({prices})
+    let extraPriceAcumulator = 0;
+    extras.forEach((extra) => {
+      const extraPrice = prices.find((price) => {
+        console.log({priceSub: price.subject,extrasName:extra.name })
+        return price.subject === extra.name
+      });
+      const quantity = extra.quantity || 1;
+      extraPriceAcumulator = extraPriceAcumulator + quantity * extraPrice.price;
+    });
+    const roomPrice = prices.find((price) => price.subject === "room");
+    const totalPrice = roomPrice.price * differenceDays + extraPriceAcumulator;
+    req.body.totalPrice = totalPrice;
+  } catch (e) {
+    return next(new AppError("No price for some extra", 500));
+  }
 
   const roomBooking = await Room.updateOne(
     {
@@ -38,14 +75,14 @@ exports.roomBooking = catchAsync(async (req, res, next) => {
       $nor: [
         {
           $and: [
-            { "occupation.startDate": { $lte: new Date(endDate) } },
-            { "occupation.endDate": { $gte: new Date(endDate) } },
+            { "occupation.startDate": { $lte: clEn } },
+            { "occupation.endDate": { $gte: clEn } },
           ],
         },
         {
           $and: [
-            { "occupation.startDate": { $lte: new Date(startDate) } },
-            { "occupation.endDate": { $gte: new Date(startDate) } },
+            { "occupation.startDate": { $lte: clSt } },
+            { "occupation.endDate": { $gte: clSt } },
           ],
         },
       ],
@@ -54,8 +91,8 @@ exports.roomBooking = catchAsync(async (req, res, next) => {
       $addToSet: {
         occupation: [
           {
-            startDate: new Date(startDate),
-            endDate: new Date(endDate),
+            startDate: st,
+            endDate: en,
             paymentMethodId,
           },
         ],
@@ -63,25 +100,11 @@ exports.roomBooking = catchAsync(async (req, res, next) => {
     }
   );
 
-  let differenceDays =
-    (new Date(endDate).getTime() - new Date(startDate).getTime()) /
-    (1000 * 3600 * 24);
-  try {
-    let prices = await Price.find({});
-    let extraPriceAcumulator = 0;
-    extras.forEach((extra) => {
-      const extraPrice = prices.find((price) => price.subject === extra.extra);
-      const quantity = extra.quantity || 1;
-      extraPriceAcumulator = extraPriceAcumulator + quantity * extraPrice.price;
-    });
-    const roomPrice = prices.find((price) => price.subject === "room");
-    const totalPrice = roomPrice.price * differenceDays + extraPriceAcumulator;
-    req.body.totalPrice = totalPrice;
-  } catch (e) {
-    next(new AppError("No price for some extra", 500));
-  }
+  console.log('avaiability', availability.length, roomBooking.nModified)
 
   if (!availability.length && !!roomBooking.nModified) {
+    req.body.startDate = st
+    req.body.endDate = en
     let newBooking = await Booking.create(req.body);
     res.status(201).json({
       status: "success",
@@ -133,3 +156,48 @@ exports.paymentBooking = catchAsync(async (req, res, next) => {
     },
   });
 });
+
+exports.roomAviability = catchAsync(async(req, res, next) => {
+
+  const notAvailability = await Booking.find({
+    // room: room,
+    $or: [
+      {
+        $and: [
+          { startDate: { $lte: new Date(req.body.endDate) } },
+          { endDate: { $gte: new Date(req.body.endDate) } },
+        ],
+      },
+      {
+        $and: [
+          { startDate: { $lte: new Date(req.body.startDate) } },
+          { endDate: { $gte: new Date(req.body.startDate) } },
+        ],
+      },
+    ],
+  });
+
+  const response = {11: true, 12: true,13: true, 14:true}
+
+
+  notAvailability.map(element=>{
+    response[element.room] = false
+  })
+  res.status(201).json({
+    status: "success",
+    data: {
+      response
+    },
+  });
+})
+
+exports.bookings = catchAsync(async(req, res, next)=>{
+  const bookings = await Booking.find({}).sort({room:1})
+  // console.log()
+  res.status(200).json({
+    status: "success",
+    data: {
+      bookings
+    },
+  });
+})
