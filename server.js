@@ -24,9 +24,6 @@ process.on('uncaughtException', (err) => {
   console.log('UNCAUGHT REJECTION');
   process.exit(1);
 });
-//configuraciones de variables glbales(dotenv.config) antes para poder acceder a las variables
-// console.log(app.get('env'));
-// console.log(process.env);
 const port = process.env.PORT || 3000;
 const server = app.listen(port, () => {
   console.log(`App runin on port ${port}...`);

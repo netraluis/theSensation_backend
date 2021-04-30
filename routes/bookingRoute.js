@@ -12,6 +12,5 @@ router.route('/aviability').post(bookingController.roomAviability);
 
 router.route('/payment').post(bookingController.paymentBooking).get(authController.protect, bookingController.bookings);
 
-// router.route('/all').get(bookingController.bookings)
 
 module.exports = router;
