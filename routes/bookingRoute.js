@@ -6,7 +6,9 @@ const bookingController = require('../controllers/bookingController')
 
 const authController = require('../controllers/authController');
 
-router.route('/').get(bookingController.roomAviability).post( bookingController.roomBooking);
+router.route('/')
+// .get(bookingController.roomAviability)
+.post( bookingController.roomBooking);
 
 router.route('/aviability').post(bookingController.roomAviability);
 
