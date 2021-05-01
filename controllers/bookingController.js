@@ -6,7 +6,6 @@ const Price = require("../models/priceModel");
 const Stripe = require("stripe");
 
 exports.roomBooking = catchAsync(async (req, res, next) => {
-  console.log(req.body)
   const { startDate, endDate, paymentMethodId, room, extras } = req.body;
 
   let st = new Date(startDate);
@@ -52,13 +51,9 @@ exports.roomBooking = catchAsync(async (req, res, next) => {
     (1000 * 3600 * 24);
   try {
     let prices = await Price.find({});
-    console.log({prices})
     let extraPriceAcumulator = 0;
     extras.forEach((extra) => {
-      const extraPrice = prices.find((price) => {
-        console.log({priceSub: price.subject,extrasName:extra.name })
-        return price.subject === extra.name
-      });
+      const extraPrice = prices.find(price => price.subject === extra.name);
       const quantity = extra.quantity || 1;
       extraPriceAcumulator = extraPriceAcumulator + quantity * extraPrice.price;
     });
@@ -100,8 +95,6 @@ exports.roomBooking = catchAsync(async (req, res, next) => {
     }
   );
 
-  console.log('avaiability', availability.length, roomBooking.nModified)
-
   if (!availability.length && !!roomBooking.nModified) {
     req.body.startDate = st
     req.body.endDate = en
@@ -113,7 +106,7 @@ exports.roomBooking = catchAsync(async (req, res, next) => {
       },
     });
   } else {
-    return next(new AppError("Room already booked", 401));
+    return next(new AppError("Room already booked", 403));
   }
 });
 
