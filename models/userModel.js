@@ -22,8 +22,7 @@ const userSchema = new mongoose.Schema({
   password: {
     type: String,
     required: [true, 'Must use a password'],
-    minlength: [8, 'password must have more or equal to 5'],
-    //para qeeu no se muestre
+    minlength: [8, 'password must have more or equal to 8'],
     select: false,
   },
   passwordChangedAt: {
@@ -38,7 +37,6 @@ userSchema.pre('save', async function (next) {
   if (!this.isModified('password')) return next();
   //encripta password con crypt coste 12
   this.password = await bcrypt.hash(this.password, 12);
-  this.passwordConfirm = undefined;
 
   next();
 });

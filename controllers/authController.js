@@ -24,8 +24,6 @@ const createSendToken = (user, statusCode, res) => {
     expires: new Date(
       Date.now() + process.env.JTW_COOKIE_EXPIRE_IN * 60 * 1000
     ),
-    //solamente enviada en conexion encriptada (https)
-    // secure: true,
     //recibe la cookie y el navegador la guarda y la envia en cada request
     httpOnly: true,
   };
@@ -46,7 +44,13 @@ const createSendToken = (user, statusCode, res) => {
 exports.signup = catchAsync(async (req, res, next) => {
 
   const newUser = await User.create(req.body);
-  createSendToken(newUser, 201, res);
+  res.status(statusCode).json({
+    status: 'success',
+    token,
+    data: {
+      newUser,
+    },
+  });
 });
 
 exports.login = catchAsync(async (req, res, next) => {
@@ -57,8 +61,6 @@ exports.login = catchAsync(async (req, res, next) => {
   }
   //2)Check if user exist and password is correct
   const user = await User.findOne({ email }).select('+password');
-
-  // const correct = await user.correctPassword(password, user.password);
 
   if (!user || !(await user.correctPassword(password, user.password))) {
     return next(new AppError('Incorrect email or password'), 401);
@@ -117,7 +119,6 @@ exports.updatePassword = catchAsync(async (req, res, next) => {
     const { passwordCurrent, newPassword } = req.body;
   
     // 1) Get user from the collection
-    //en el protect route nos pasan el user
     const user = await User.findById(req.user._id).select('+password');
     // 2) Check if POSTed current password is correct
     if (!user || !(await user.correctPassword(passwordCurrent, user.password))) {
@@ -126,7 +127,6 @@ exports.updatePassword = catchAsync(async (req, res, next) => {
     // 3) If so, update password
     user.password = newPassword;
     await user.save();
-    // User.findByIdAndUpdate will not work as
     // 4) Log user in, send JWT
     createSendToken(user, 200, res);
   });
