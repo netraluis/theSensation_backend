@@ -13,39 +13,16 @@ exports.roomBooking = catchAsync(async (req, res, next) => {
   let en = new Date(endDate);
   en.setHours( en.getHours() + 11 );
 
-  let clSt = new Date(startDate);
-  clSt.setHours( st.getHours() + 12);
-  let clEn = new Date(endDate);
-  clEn.setHours( en.getHours() + 12 );
-
-  
-
   /////////////////////////////////////////// crear nueva habitacion/////////////////////
 
   // const newRoom = await Room.create({
   //   room:'11',
   //   occupation: [{startDate: new Date("1970-01-10"), endDate: new Date("1970-01-10")}]
   // })
-  const availability = await Booking.find({
-    room: room,
-    $or: [
-      {
-        $and: [
-          { startDate: { $lte: clEn } },
-          { endDate: { $gte: clEn } },
-        ],
-      },
-      {
-        $and: [
-          { startDate: { $lte: clSt } },
-          { endDate: { $gte: clSt } },
-        ],
-      },
-    ],
-  });
 
   
 
+  
   let differenceDays =
     (new Date(endDate).getTime() - new Date(startDate).getTime()) /
     (1000 * 3600 * 24);
@@ -70,14 +47,14 @@ exports.roomBooking = catchAsync(async (req, res, next) => {
       $nor: [
         {
           $and: [
-            { "occupation.startDate": { $lte: clEn } },
-            { "occupation.endDate": { $gte: clEn } },
+            { "occupation.startDate": { $lt: en } },
+            { "occupation.endDate": { $gt: en } },
           ],
         },
         {
           $and: [
-            { "occupation.startDate": { $lte: clSt } },
-            { "occupation.endDate": { $gte: clSt } },
+            { "occupation.startDate": { $lt: st } },
+            { "occupation.endDate": { $gt: st } },
           ],
         },
       ],
@@ -95,7 +72,7 @@ exports.roomBooking = catchAsync(async (req, res, next) => {
     }
   );
 
-  if (!availability.length && !!roomBooking.nModified) {
+  if (!!roomBooking.nModified) {
     req.body.startDate = st
     req.body.endDate = en
     let newBooking = await Booking.create(req.body);
@@ -151,19 +128,23 @@ exports.paymentBooking = catchAsync(async (req, res, next) => {
 });
 
 exports.roomAviability = catchAsync(async(req, res, next) => {
+  let st = new Date(req.body.startDate);
+  st.setHours( st.getHours() + 13 );
+  let en = new Date(req.body.endDate);
+  en.setHours( en.getHours() + 11 );
   const notAvailability = await Booking.find({
     // room: room,
     $or: [
       {
         $and: [
-          { startDate: { $lte: new Date(req.body.endDate) } },
-          { endDate: { $gte: new Date(req.body.endDate) } },
+          { startDate: { $lte: en } },
+          { endDate: { $gte: en } },
         ],
       },
       {
         $and: [
-          { startDate: { $lte: new Date(req.body.startDate) } },
-          { endDate: { $gte: new Date(req.body.startDate) } },
+          { startDate: { $lte: st } },
+          { endDate: { $gte: st } },
         ],
       },
     ],
