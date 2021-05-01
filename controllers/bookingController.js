@@ -158,7 +158,7 @@ exports.paymentBooking = catchAsync(async (req, res, next) => {
 });
 
 exports.roomAviability = catchAsync(async(req, res, next) => {
-
+  console.log('llego', req.body)
   const notAvailability = await Booking.find({
     // room: room,
     $or: [
@@ -176,6 +176,7 @@ exports.roomAviability = catchAsync(async(req, res, next) => {
       },
     ],
   });
+  console.log('llego1')
 
   const response = {11: true, 12: true,13: true, 14:true}
 
