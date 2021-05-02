@@ -24,11 +24,6 @@ const bookingSchema = new mongoose.Schema({
     type: Date,
     required: [true, "need end date"],
   },
-  // dates: {
-  //   type: [Date],
-  //   default: [],
-  //   required: [true, "need dates to complete the reservation"],
-  // },
   room: {
     type: String,
     required: [true, "room is required"],
@@ -46,22 +41,6 @@ const bookingSchema = new mongoose.Schema({
   },
   totalPrice: Number
 });
-
-// bookingSchema.pre("save", function (next) {
-//   //funcion para sumar dias
-//   Date.prototype.addDays = function (days) {
-//     let date = new Date(this.valueOf());
-//     date.setDate(date.getDate() + days);
-//     return date;
-//   };
-
-//   let currentDate = this.startDate;
-//   while (currentDate <= this.endDate) {
-//     this.dates.push(new Date(currentDate));
-//     currentDate = currentDate.addDays(1);
-//   }
-//   next();
-// });
 
 const Booking = mongoose.model("Booking", bookingSchema);
 

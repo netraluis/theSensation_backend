@@ -13,16 +13,6 @@ exports.roomBooking = catchAsync(async (req, res, next) => {
   let en = new Date(endDate);
   en.setHours( en.getHours() + 11 );
 
-  /////////////////////////////////////////// crear nueva habitacion/////////////////////
-
-  // const newRoom = await Room.create({
-  //   room:'11',
-  //   occupation: [{startDate: new Date("1970-01-10"), endDate: new Date("1970-01-10")}]
-  // })
-
-  
-
-  
   let differenceDays =
     (new Date(endDate).getTime() - new Date(startDate).getTime()) /
     (1000 * 3600 * 24);
@@ -40,10 +30,10 @@ exports.roomBooking = catchAsync(async (req, res, next) => {
   } catch (e) {
     return next(new AppError("No price for some extra", 500));
   }
-
+  
   const roomBooking = await Room.updateOne(
     {
-      room: room,
+      room,
       $nor: [
         {
           $and: [
@@ -96,29 +86,24 @@ exports.paymentBooking = catchAsync(async (req, res, next) => {
     pay: false,
   });
   const amount = paymentBooking.totalPrice;
-  const roomBooking = await Room.findOne({ room: paymentBooking.room });
-  const paymentBookingUpdate = await Booking.updateOne(
-    { paymentMethodId: paymentMethodId, pay: false },
-    { pay: true }
-  );
-  const roomFilter = roomBooking.occupation.filter(
-    (occupation) => occupation.paymentMethodId !== paymentMethodId
-  );
-  const roomFind = roomBooking.occupation.find(
-    (occupation) => occupation.paymentMethodId === paymentMethodId
-  );
-  roomFilter.push({ ...roomFind._doc, pay: true });
-  await Room.update({ room: paymentBooking.room }, { occupation: roomFilter });
   const paymentIntent = await stripe.paymentIntents.create({
     amount: amount * 100,
     currency: "eur",
     payment_method_types: ["card"],
-    // customer: customer.id,
     payment_method: paymentMethodId,
     off_session: true,
     confirm: true,
   });
 
+  const roomBooking = await Room.findOne({ room: paymentBooking.room });
+  const roomFilter = roomBooking.occupation.filter((occupation) => occupation.paymentMethodId !== paymentMethodId);
+  const roomFind = roomBooking.occupation.find((occupation) => occupation.paymentMethodId === paymentMethodId);
+  roomFilter.push({ ...roomFind._doc, pay: true });
+  await Room.update({ room: paymentBooking.room }, { occupation: roomFilter });
+  await Booking.updateOne(
+    { paymentMethodId: paymentMethodId, pay: false },
+    { pay: true }
+  );
   res.status(200).json({
     status: "success",
     data: {
@@ -133,7 +118,6 @@ exports.roomAviability = catchAsync(async(req, res, next) => {
   let en = new Date(req.body.endDate);
   en.setHours( en.getHours() + 11 );
   const notAvailability = await Booking.find({
-    // room: room,
     $or: [
       {
         $and: [
